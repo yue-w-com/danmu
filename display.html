@@ -32,7 +32,10 @@
     fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
       .then(data => data.forEach(d => showDanmu(d.text)));
-    socket.onmessage = e => showDanmu(e.data);
+    socket.onmessage = async (e) => {
+      const text = await e.data.text(); // 处理 Blob 为字符串
+      showDanmu(text);
+    };
   </script>
 </body>
 </html>
