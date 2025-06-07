@@ -29,7 +29,7 @@
       document.body.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
     };
-    fetch('/history')
+    fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
       .then(data => data.forEach(d => showDanmu(d.text)));
     socket.onmessage = e => showDanmu(e.data);
