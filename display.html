@@ -21,6 +21,7 @@
 <body>
   <script>
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
+
     const showDanmu = (text) => {
       const el = document.createElement('div');
       el.className = 'danmu';
@@ -29,12 +30,29 @@
       document.body.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
     };
+
+    let historyData = [];
+
+    // 拉取历史弹幕数据
     fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
-      .then(data => data.forEach(d => showDanmu(d.text)));
+      .then(data => {
+        historyData = data.map(d => d.text);
+
+        // 循环随机弹幕
+        setInterval(() => {
+          if (historyData.length > 0) {
+            const text = historyData[Math.floor(Math.random() * historyData.length)];
+            showDanmu(text);
+          }
+        }, 2000); // 每2秒随机显示一个历史弹幕
+      });
+
+    // 接收新弹幕，处理 Blob 格式
     socket.onmessage = async (e) => {
-      const text = await e.data.text(); // 处理 Blob 为字符串
+      const text = await e.data.text();
       showDanmu(text);
+      historyData.push(text); // 实时新弹幕也加入历史池
     };
   </script>
 </body>
