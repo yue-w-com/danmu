@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>弹幕展示</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    .danmu {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 24px;
+      color: white;
+      animation: move 8s linear forwards;
+    }
+    @keyframes move {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const socket = new WebSocket('wss://your-backend.onrender.com');
+    const showDanmu = (text) => {
+      const el = document.createElement('div');
+      el.className = 'danmu';
+      el.textContent = text;
+      el.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    };
+    fetch('/history')
+      .then(res => res.json())
+      .then(data => data.forEach(d => showDanmu(d.text)));
+    socket.onmessage = e => showDanmu(e.data);
+  </script>
+</body>
+</html>
