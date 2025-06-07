@@ -21,6 +21,7 @@
 <body>
   <script>
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
+    const historyData = [];
 
     const showDanmu = (text) => {
       const el = document.createElement('div');
@@ -31,24 +32,32 @@
       el.addEventListener('animationend', () => el.remove());
     };
 
-    let historyData = [];
+    // 弹幕播放循环
+    const loopDanmu = () => {
+      if (historyData.length > 0) {
+        const randomText = historyData[Math.floor(Math.random() * historyData.length)];
+        showDanmu(randomText);
+      }
+      setTimeout(loopDanmu, 2000); // 每2秒循环一次
+    };
 
-    // 获取历史弹幕并启动无限循环播放
+    // 加载历史并启动循环
     fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
       .then(data => {
-        historyData = data.map(d => d.text);
-
-        // 无限循环播放：每2秒随机播放一条
-        setInterval(() => {
-          if (historyData.length > 0) {
-            const randomText = historyData[Math.floor(Math.random() * historyData.length)];
-            showDanmu(randomText);
-          }
-        }, 2000);
+        if (Array.isArray(data)) {
+          data.forEach(d => {
+            if (d.text) historyData.push(d.text);
+          });
+        }
+        loopDanmu(); // 无论是否为空都启动循环
+      })
+      .catch(err => {
+        console.error('加载历史弹幕失败:', err);
+        loopDanmu(); // 即使失败也启动空循环
       });
 
-    // 接收新弹幕并加入历史池
+    // 接收新弹幕，加入历史池
     socket.onmessage = async (e) => {
       const text = await e.data.text();
       showDanmu(text);
