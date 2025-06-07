@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>弹幕展示 (调试版)</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    .danmu {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 24px;
+      color: white;
+      animation: move 8s linear forwards;
+    }
+    @keyframes move {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const socket = new WebSocket('wss://danmu-backend.onrender.com');
+    const historyData = [];
+
+    const showDanmu = (text) => {
+      const el = document.createElement('div');
+      el.className = 'danmu';
+      el.textContent = text;
+      el.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    };
+
+    const loopDanmu = () => {
+      if (historyData.length > 0) {
+        const randomText = historyData[Math.floor(Math.random() * historyData.length)];
+        console.log('显示弹幕:', randomText);
+        showDanmu(randomText);
+      } else {
+        console.log('没有历史弹幕可播放');
+      }
+      setTimeout(loopDanmu, 2000);
+    };
+
+    fetch('https://danmu-backend.onrender.com/history')
+      .then(res => {
+        console.log('History response status:', res.status);
+        return res.json();
+      })
+      .then(data => {
+        console.log('History data:', data);
+        if (Array.isArray(data)) {
+          data.forEach(d => {
+            console.log('每条记录:', d);
+            if (d.text) historyData.push(d.text);
+          });
+        }
+        loopDanmu();
+      })
+      .catch(err => {
+        console.error('获取历史弹幕失败:', err);
+        loopDanmu();
+      });
+
+    socket.onmessage = async (e) => {
+      const text = await e.data.text();
+      console.log('收到实时弹幕:', text);
+      showDanmu(text);
+      historyData.push(text);
+    };
+  </script>
+</body>
+</html>
