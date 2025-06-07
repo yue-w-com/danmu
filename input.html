@@ -5,7 +5,7 @@
   <input type="text" id="message" placeholder="输入弹幕..." />
   <button onclick="send()">发送</button>
   <script>
-    const socket = new WebSocket('https://danmu-backend.onrender.com');
+    const socket = new WebSocket('wss://danmu-backend.onrender.com');
     function send() {
       const msg = document.getElementById('message').value;
       if (msg.trim()) {
