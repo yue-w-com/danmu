@@ -33,26 +33,26 @@
 
     let historyData = [];
 
-    // 拉取历史弹幕数据
+    // 获取历史弹幕并启动无限循环播放
     fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
       .then(data => {
         historyData = data.map(d => d.text);
 
-        // 循环随机弹幕
+        // 无限循环播放：每2秒随机播放一条
         setInterval(() => {
           if (historyData.length > 0) {
-            const text = historyData[Math.floor(Math.random() * historyData.length)];
-            showDanmu(text);
+            const randomText = historyData[Math.floor(Math.random() * historyData.length)];
+            showDanmu(randomText);
           }
-        }, 2000); // 每2秒随机显示一个历史弹幕
+        }, 2000);
       });
 
-    // 接收新弹幕，处理 Blob 格式
+    // 接收新弹幕并加入历史池
     socket.onmessage = async (e) => {
       const text = await e.data.text();
       showDanmu(text);
-      historyData.push(text); // 实时新弹幕也加入历史池
+      historyData.push(text);
     };
   </script>
 </body>
