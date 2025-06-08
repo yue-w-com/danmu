@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（固定速度+精确滑动+轨道+多色）</title>
+  <title>弹幕展示（固定速度+精准滑动+轨道+多色 修正版）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -29,7 +29,6 @@
       el.className = 'danmu';
       el.textContent = text;
 
-      // 轨道定位
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const topPosition = currentTrack * trackHeight;
       currentTrack = (currentTrack + 1) % TRACK_COUNT;
@@ -41,22 +40,20 @@
 
       document.body.appendChild(el);
 
-      // 等待渲染后测量宽度
       requestAnimationFrame(() => {
         const totalDistance = window.innerWidth + el.offsetWidth;
         const duration = totalDistance / SPEED;
+        const animName = 'move_' + Math.random().toString(36).substr(2, 5);
 
-        const animationName = 'move-' + Math.random().toString(36).substr(2, 5);
         const style = document.createElement('style');
-        style.textContent = \`
-          @keyframes \${animationName} {
-            from { transform: translateX(0); }
-            to { transform: translateX(-\${totalDistance}px); }
-          }
-        \`;
+        style.innerHTML =
+          '@keyframes ' + animName + ' {' +
+          'from { transform: translateX(0); }' +
+          'to { transform: translateX(-' + totalDistance + 'px); }' +
+          '}';
         document.head.appendChild(style);
 
-        el.style.animation = \`\${animationName} \${duration}s linear forwards\`;
+        el.style.animation = animName + ' ' + duration + 's linear forwards';
       });
 
       el.addEventListener('animationend', () => el.remove());
