@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（随机轨道+多色+固定速度）</title>
+  <title>弹幕展示（自定义速度+轨道+多色）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -19,16 +19,17 @@
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
     const historyData = [];
 
-    const TRACK_COUNT = 5;
+    let TRACK_COUNT = parseInt(localStorage.getItem('danmu_tracks')) || 5;
+    const SPEED = parseInt(localStorage.getItem('danmu_speed')) || 150;
+
     const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
-    const SPEED = 150; // pixels per second
 
     const showDanmu = (text, useRandomTrack = false) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
 
-      // 随机或顺序轨道选择
+      // 随机或顺序轨道
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const track = useRandomTrack
         ? Math.floor(Math.random() * TRACK_COUNT)
@@ -65,7 +66,7 @@
     const loopDanmu = () => {
       if (historyData.length > 0) {
         const randomText = historyData[Math.floor(Math.random() * historyData.length)];
-        showDanmu(randomText, true); // ✅ 使用随机轨道
+        showDanmu(randomText, true);
       }
       setTimeout(loopDanmu, 4000);
     };
@@ -87,7 +88,7 @@
 
     socket.onmessage = async (e) => {
       const text = await e.data.text();
-      showDanmu(text, false); // 实时弹幕顺序轨道
+      showDanmu(text, false);
       historyData.push(text);
     };
   </script>
