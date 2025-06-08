@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板（含字体设置）</title>
+  <title>弹幕控制面板（同步当前设置）</title>
   <style>
     body {
       font-family: sans-serif;
@@ -31,7 +31,7 @@
   </style>
 </head>
 <body>
-  <h1>🔐 弹幕控制面板（带密码）</h1>
+  <h1>🔐 弹幕控制面板（同步当前设置）</h1>
 
   <label>
     管理密码：
@@ -40,17 +40,17 @@
 
   <label>
     弹幕速度（像素/秒）：
-    <input type="number" id="speedInput" value="150" />
+    <input type="number" id="speedInput" />
   </label>
 
   <label>
     轨道数量：
-    <input type="number" id="trackInput" value="5" />
+    <input type="number" id="trackInput" />
   </label>
 
   <label>
     字体大小（像素）：
-    <input type="number" id="fontSizeInput" value="24" />
+    <input type="number" id="fontSizeInput" />
   </label>
 
   <button onclick="updateSettings()">✅ 保存设置</button>
@@ -60,6 +60,12 @@
   <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
 
   <script>
+    function loadDefaults() {
+      document.getElementById('speedInput').value = localStorage.getItem('danmu_speed') || 150;
+      document.getElementById('trackInput').value = localStorage.getItem('danmu_tracks') || 5;
+      document.getElementById('fontSizeInput').value = localStorage.getItem('danmu_font_size') || 24;
+    }
+
     function requirePassword() {
       const password = document.getElementById('passwordInput').value.trim();
       if (!password) {
@@ -107,6 +113,8 @@
         });
       }
     }
+
+    window.onload = loadDefaults;
   </script>
 </body>
 </html>
