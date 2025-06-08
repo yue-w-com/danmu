@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>弹幕控制面板</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, button {
+      font-size: 16px;
+      margin-top: 5px;
+    }
+    button {
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎛️ 弹幕控制面板</h1>
+
+  <label>
+    修改弹幕速度（像素/秒）：
+    <input type="number" id="speedInput" value="150" />
+  </label>
+
+  <label>
+    修改轨道数量：
+    <input type="number" id="trackInput" value="5" />
+  </label>
+
+  <button onclick="updateSettings()">✅ 应用设置</button>
+
+  <hr />
+
+  <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
+
+  <script>
+    function updateSettings() {
+      const speed = parseInt(document.getElementById('speedInput').value, 10);
+      const tracks = parseInt(document.getElementById('trackInput').value, 10);
+      localStorage.setItem('danmu_speed', speed);
+      localStorage.setItem('danmu_tracks', tracks);
+      alert('✅ 设置已保存，刷新 display 页面后生效');
+    }
+
+    function clearHistory() {
+      if (confirm('确定要清除所有历史弹幕吗？')) {
+        fetch('https://danmu-backend.onrender.com/clear', {
+          method: 'POST'
+        })
+        .then(res => {
+          if (res.ok) {
+            alert('🧼 历史弹幕已清除！');
+          } else {
+            alert('⚠️ 清除失败');
+          }
+        })
+        .catch(err => {
+          alert('⚠️ 网络错误：' + err);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
