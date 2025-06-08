@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板（带密码保护）</title>
+  <title>弹幕控制面板（全部受密码保护）</title>
   <style>
     body {
       font-family: sans-serif;
@@ -31,7 +31,12 @@
   </style>
 </head>
 <body>
-  <h1>🔐 弹幕控制面板（密码保护）</h1>
+  <h1>🔐 弹幕控制面板（所有操作需密码）</h1>
+
+  <label>
+    管理密码：
+    <input type="password" id="passwordInput" placeholder="输入密码后执行任何操作" />
+  </label>
 
   <label>
     修改弹幕速度（像素/秒）：
@@ -43,32 +48,37 @@
     <input type="number" id="trackInput" value="5" />
   </label>
 
-  <button onclick="updateSettings()">✅ 应用设置</button>
+  <button onclick="updateSettings()">✅ 保存设置</button>
 
   <hr />
-
-  <label>
-    管理密码：
-    <input type="password" id="passwordInput" placeholder="输入清除密码" />
-  </label>
 
   <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
 
   <script>
+    function requirePassword() {
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!password) {
+        alert('⚠️ 请先输入密码');
+        return null;
+      }
+      return password;
+    }
+
     function updateSettings() {
+      const password = requirePassword();
+      if (!password) return;
+
       const speed = parseInt(document.getElementById('speedInput').value, 10);
       const tracks = parseInt(document.getElementById('trackInput').value, 10);
+
       localStorage.setItem('danmu_speed', speed);
       localStorage.setItem('danmu_tracks', tracks);
       alert('✅ 设置已保存，刷新 display 页面后生效');
     }
 
     function clearHistory() {
-      const password = document.getElementById('passwordInput').value.trim();
-      if (!password) {
-        alert('⚠️ 请输入密码');
-        return;
-      }
+      const password = requirePassword();
+      if (!password) return;
 
       if (confirm('确定要清除所有历史弹幕吗？')) {
         fetch('https://danmu-backend.onrender.com/clear', {
