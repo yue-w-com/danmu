@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>发送弹幕（带颜色选择）</title>
+  <title>发送弹幕（推荐颜色 + 自选）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -13,7 +13,7 @@
       margin: 0;
       font-size: 18px;
     }
-    input[type="text"], input[type="color"] {
+    input[type="text"] {
       width: 100%;
       padding: 14px;
       font-size: 20px;
@@ -24,10 +24,6 @@
       background: #222;
       color: #fff;
     }
-    input[type="color"] {
-      padding: 6px;
-      height: 60px;
-    }
     button {
       width: 100%;
       padding: 16px;
@@ -37,21 +33,56 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
       background: #0f78d4;
+    }
+    .colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .color-choice {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid white;
+      cursor: pointer;
+    }
+    input[type="color"] {
+      width: 100%;
+      padding: 6px;
+      height: 50px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h2 style="text-align:center;">🎨 发送弹幕</h2>
   <input type="text" id="danmuInput" placeholder="请输入弹幕内容..." />
-  <label for="colorInput">选择颜色：</label>
+  <div class="colors">
+    <div class="color-choice" style="background:#ffffff" onclick="selectColor('#ffffff')"></div>
+    <div class="color-choice" style="background:#ff5c5c" onclick="selectColor('#ff5c5c')"></div>
+    <div class="color-choice" style="background:#ffa94d" onclick="selectColor('#ffa94d')"></div>
+    <div class="color-choice" style="background:#ffe066" onclick="selectColor('#ffe066')"></div>
+    <div class="color-choice" style="background:#8ce99a" onclick="selectColor('#8ce99a')"></div>
+    <div class="color-choice" style="background:#74c0fc" onclick="selectColor('#74c0fc')"></div>
+    <div class="color-choice" style="background:#b197fc" onclick="selectColor('#b197fc')"></div>
+    <div class="color-choice" style="background:#f783ac" onclick="selectColor('#f783ac')"></div>
+  </div>
   <input type="color" id="colorInput" value="#ffffff" />
   <button onclick="sendDanmu()">🚀 发射</button>
 
   <script>
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
+
+    function selectColor(hex) {
+      document.getElementById('colorInput').value = hex;
+    }
 
     function sendDanmu() {
       const input = document.getElementById('danmuInput');
