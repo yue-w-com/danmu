@@ -1,18 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>发送弹幕</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>发送弹幕（带颜色选择）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 20px;
+      margin: 0;
+      font-size: 18px;
+    }
+    input[type="text"], input[type="color"] {
+      width: 100%;
+      padding: 14px;
+      font-size: 20px;
+      border-radius: 10px;
+      border: none;
+      box-sizing: border-box;
+      margin-bottom: 15px;
+      background: #222;
+      color: #fff;
+    }
+    input[type="color"] {
+      padding: 6px;
+      height: 60px;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 20px;
+      background: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0f78d4;
+    }
+  </style>
+</head>
 <body>
-  <input type="text" id="message" placeholder="输入弹幕..." />
-  <button onclick="send()">发送</button>
+  <h2 style="text-align:center;">🎨 发送弹幕</h2>
+  <input type="text" id="danmuInput" placeholder="请输入弹幕内容..." />
+  <label for="colorInput">选择颜色：</label>
+  <input type="color" id="colorInput" value="#ffffff" />
+  <button onclick="sendDanmu()">🚀 发射</button>
+
   <script>
-    const socket = new WebSocket('wss://your-backend.onrender.com');
-    function send() {
-      const msg = document.getElementById('message').value;
-      if (msg.trim()) {
-        socket.send(msg);
-        document.getElementById('message').value = '';
+    const socket = new WebSocket('wss://danmu-backend.onrender.com');
+
+    function sendDanmu() {
+      const input = document.getElementById('danmuInput');
+      const colorInput = document.getElementById('colorInput');
+      const text = input.value.trim();
+      const color = colorInput.value || '#ffffff';
+
+      if (text) {
+        const payload = JSON.stringify({ text, color });
+        socket.send(payload);
+        input.value = '';
       }
     }
+
+    document.getElementById('danmuInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendDanmu();
+    });
   </script>
 </body>
 </html>
