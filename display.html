@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（固定速度+精准滑动+轨道+多色 修正版）</title>
+  <title>弹幕展示（随机轨道+多色+固定速度）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -20,18 +20,20 @@
     const historyData = [];
 
     const TRACK_COUNT = 5;
-    let currentTrack = 0;
     const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
     const SPEED = 150; // pixels per second
 
-    const showDanmu = (text) => {
+    const showDanmu = (text, useRandomTrack = false) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
 
+      // 随机或顺序轨道选择
       const trackHeight = window.innerHeight / TRACK_COUNT;
-      const topPosition = currentTrack * trackHeight;
-      currentTrack = (currentTrack + 1) % TRACK_COUNT;
+      const track = useRandomTrack
+        ? Math.floor(Math.random() * TRACK_COUNT)
+        : (showDanmu.trackIndex = (showDanmu.trackIndex + 1) % TRACK_COUNT);
+      const topPosition = track * trackHeight;
 
       el.style.top = topPosition + 'px';
       el.style.right = '0';
@@ -58,11 +60,12 @@
 
       el.addEventListener('animationend', () => el.remove());
     };
+    showDanmu.trackIndex = -1;
 
     const loopDanmu = () => {
       if (historyData.length > 0) {
         const randomText = historyData[Math.floor(Math.random() * historyData.length)];
-        showDanmu(randomText);
+        showDanmu(randomText, true); // ✅ 使用随机轨道
       }
       setTimeout(loopDanmu, 4000);
     };
@@ -84,7 +87,7 @@
 
     socket.onmessage = async (e) => {
       const text = await e.data.text();
-      showDanmu(text);
+      showDanmu(text, false); // 实时弹幕顺序轨道
       historyData.push(text);
     };
   </script>
