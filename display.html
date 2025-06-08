@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（含字体大小设置）</title>
+  <title>弹幕展示（支持颜色）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -22,13 +22,12 @@
     const SPEED = parseInt(localStorage.getItem('danmu_speed')) || 150;
     const FONT_SIZE = parseInt(localStorage.getItem('danmu_font_size')) || 24;
 
-    const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
-
-    const showDanmu = (text, useRandomTrack = false) => {
+    const showDanmu = (text, color, useRandomTrack = false) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
       el.style.fontSize = FONT_SIZE + 'px';
+      el.style.color = color || 'white';
 
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const track = useRandomTrack
@@ -39,7 +38,6 @@
       el.style.top = topPosition + 'px';
       el.style.right = '0';
       el.style.left = 'auto';
-      el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
       document.body.appendChild(el);
 
@@ -65,8 +63,8 @@
 
     const loopDanmu = () => {
       if (historyData.length > 0) {
-        const randomText = historyData[Math.floor(Math.random() * historyData.length)];
-        showDanmu(randomText, true);
+        const d = historyData[Math.floor(Math.random() * historyData.length)];
+        showDanmu(d.text, d.color, true);
       }
       setTimeout(loopDanmu, 4000);
     };
@@ -75,9 +73,7 @@
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          data.forEach(d => {
-            if (d.text) historyData.push(d.text);
-          });
+          historyData.push(...data);
         }
         loopDanmu();
       })
@@ -87,9 +83,13 @@
       });
 
     socket.onmessage = async (e) => {
-      const text = await e.data.text();
-      showDanmu(text, false);
-      historyData.push(text);
+      try {
+        const data = JSON.parse(await e.data.text());
+        showDanmu(data.text, data.color, false);
+        historyData.push(data);
+      } catch (err) {
+        console.error('消息解析失败:', err);
+      }
     };
   </script>
 </body>
