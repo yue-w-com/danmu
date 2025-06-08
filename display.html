@@ -2,18 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（轨道+多色）</title>
+  <title>弹幕展示（轨道+多色+精确消失）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
       position: absolute;
       white-space: nowrap;
       font-size: 24px;
-      animation: move 8s linear forwards;
-    }
-    @keyframes move {
-      from { transform: translateX(100%); }
-      to { transform: translateX(-100%); }
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
     }
   </style>
 </head>
@@ -31,19 +28,35 @@
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
-
-      const trackHeight = window.innerHeight / TRACK_COUNT;
-      const topPosition = currentTrack * trackHeight;
+      el.style.top = (currentTrack * (window.innerHeight / TRACK_COUNT)) + 'px';
       currentTrack = (currentTrack + 1) % TRACK_COUNT;
 
-      el.style.top = topPosition + 'px';
       el.style.right = '0';
       el.style.left = 'auto';
-
-      // 随机颜色
       el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
-
       document.body.appendChild(el);
+
+      // 等待 DOM 渲染以获取宽度
+      requestAnimationFrame(() => {
+        const distance = window.innerWidth + el.offsetWidth;
+        const speed = 100; // 每秒 100 像素（可调）
+        const duration = distance / speed;
+
+        el.style.animation = `move ${duration}s linear forwards`;
+        el.style.setProperty('--move-distance', distance + 'px');
+      });
+
+      // 创建动态 keyframes
+      const styleSheet = document.styleSheets[0];
+      if (![...styleSheet.cssRules].some(r => r.name === 'move')) {
+        styleSheet.insertRule(\`
+          @keyframes move {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-1 * var(--move-distance))); }
+          }
+        \`, styleSheet.cssRules.length);
+      }
+
       el.addEventListener('animationend', () => el.remove());
     };
 
