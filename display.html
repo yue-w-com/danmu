@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（支持颜色）</title>
+  <title>弹幕展示（实时 + 历史）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -85,8 +85,8 @@
     socket.onmessage = async (e) => {
       try {
         const data = JSON.parse(await e.data.text());
-        showDanmu(data.text, data.color, false);
-        historyData.push(data);
+        showDanmu(data.text, data.color, false);  // ✅ 立即展示
+        historyData.push(data); // ✅ 追加用于循环
       } catch (err) {
         console.error('消息解析失败:', err);
       }
