@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板（全部受密码保护）</title>
+  <title>弹幕控制面板（含字体设置）</title>
   <style>
     body {
       font-family: sans-serif;
@@ -31,7 +31,7 @@
   </style>
 </head>
 <body>
-  <h1>🔐 弹幕控制面板（所有操作需密码）</h1>
+  <h1>🔐 弹幕控制面板（带密码）</h1>
 
   <label>
     管理密码：
@@ -39,13 +39,18 @@
   </label>
 
   <label>
-    修改弹幕速度（像素/秒）：
+    弹幕速度（像素/秒）：
     <input type="number" id="speedInput" value="150" />
   </label>
 
   <label>
-    修改轨道数量：
+    轨道数量：
     <input type="number" id="trackInput" value="5" />
+  </label>
+
+  <label>
+    字体大小（像素）：
+    <input type="number" id="fontSizeInput" value="24" />
   </label>
 
   <button onclick="updateSettings()">✅ 保存设置</button>
@@ -70,9 +75,12 @@
 
       const speed = parseInt(document.getElementById('speedInput').value, 10);
       const tracks = parseInt(document.getElementById('trackInput').value, 10);
+      const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10);
 
       localStorage.setItem('danmu_speed', speed);
       localStorage.setItem('danmu_tracks', tracks);
+      localStorage.setItem('danmu_font_size', fontSize);
+
       alert('✅ 设置已保存，刷新 display 页面后生效');
     }
 
