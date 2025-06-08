@@ -2,13 +2,12 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（自定义速度+轨道+多色）</title>
+  <title>弹幕展示（含字体大小设置）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
       position: absolute;
       white-space: nowrap;
-      font-size: 24px;
       animation-timing-function: linear;
       animation-fill-mode: forwards;
     }
@@ -21,6 +20,7 @@
 
     let TRACK_COUNT = parseInt(localStorage.getItem('danmu_tracks')) || 5;
     const SPEED = parseInt(localStorage.getItem('danmu_speed')) || 150;
+    const FONT_SIZE = parseInt(localStorage.getItem('danmu_font_size')) || 24;
 
     const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
 
@@ -28,8 +28,8 @@
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
+      el.style.fontSize = FONT_SIZE + 'px';
 
-      // 随机或顺序轨道
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const track = useRandomTrack
         ? Math.floor(Math.random() * TRACK_COUNT)
