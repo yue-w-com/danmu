@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（轨道+多色+动态时长）</title>
+  <title>弹幕展示（轨道+多色+更快动态时长）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -43,8 +43,8 @@
       el.style.left = 'auto';
       el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
-      // 动态时长：基础10秒 + 每字符0.3秒
-      const duration = 10 + text.length * 0.3;
+      // 更快：基础6秒 + 每字符0.2秒
+      const duration = 6 + text.length * 0.2;
       el.style.animationDuration = duration + 's';
 
       document.body.appendChild(el);
