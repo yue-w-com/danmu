@@ -2,20 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（轨道+多色+更快动态时长）</title>
+  <title>弹幕展示（固定速度+精确滑动+轨道+多色）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
       position: absolute;
       white-space: nowrap;
       font-size: 24px;
-      animation-name: move;
       animation-timing-function: linear;
       animation-fill-mode: forwards;
-    }
-    @keyframes move {
-      from { transform: translateX(100%); }
-      to { transform: translateX(-100%); }
     }
   </style>
 </head>
@@ -26,14 +21,15 @@
 
     const TRACK_COUNT = 5;
     let currentTrack = 0;
-
     const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
+    const SPEED = 150; // pixels per second
 
     const showDanmu = (text) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
 
+      // 轨道定位
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const topPosition = currentTrack * trackHeight;
       currentTrack = (currentTrack + 1) % TRACK_COUNT;
@@ -43,11 +39,26 @@
       el.style.left = 'auto';
       el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
-      // 更快：基础6秒 + 每字符0.2秒
-      const duration = 6 + text.length * 0.2;
-      el.style.animationDuration = duration + 's';
-
       document.body.appendChild(el);
+
+      // 等待渲染后测量宽度
+      requestAnimationFrame(() => {
+        const totalDistance = window.innerWidth + el.offsetWidth;
+        const duration = totalDistance / SPEED;
+
+        const animationName = 'move-' + Math.random().toString(36).substr(2, 5);
+        const style = document.createElement('style');
+        style.textContent = \`
+          @keyframes \${animationName} {
+            from { transform: translateX(0); }
+            to { transform: translateX(-\${totalDistance}px); }
+          }
+        \`;
+        document.head.appendChild(style);
+
+        el.style.animation = \`\${animationName} \${duration}s linear forwards\`;
+      });
+
       el.addEventListener('animationend', () => el.remove());
     };
 
