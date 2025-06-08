@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（实时 + 历史）</title>
+  <title>弹幕展示（修复实时展示）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -82,13 +82,13 @@
         loopDanmu();
       });
 
-    socket.onmessage = async (e) => {
+    socket.onmessage = (e) => {
       try {
-        const data = JSON.parse(await e.data.text());
+        const data = JSON.parse(e.data);
         showDanmu(data.text, data.color, false);  // ✅ 立即展示
-        historyData.push(data); // ✅ 追加用于循环
+        historyData.push(data);  // ✅ 加入历史用于后续轮播
       } catch (err) {
-        console.error('消息解析失败:', err);
+        console.error('WebSocket 消息解析失败:', err);
       }
     };
   </script>
