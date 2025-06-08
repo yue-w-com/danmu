@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板</title>
+  <title>弹幕控制面板（带密码保护）</title>
   <style>
     body {
       font-family: sans-serif;
@@ -31,7 +31,7 @@
   </style>
 </head>
 <body>
-  <h1>🎛️ 弹幕控制面板</h1>
+  <h1>🔐 弹幕控制面板（密码保护）</h1>
 
   <label>
     修改弹幕速度（像素/秒）：
@@ -47,6 +47,11 @@
 
   <hr />
 
+  <label>
+    管理密码：
+    <input type="password" id="passwordInput" placeholder="输入清除密码" />
+  </label>
+
   <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
 
   <script>
@@ -59,15 +64,24 @@
     }
 
     function clearHistory() {
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!password) {
+        alert('⚠️ 请输入密码');
+        return;
+      }
+
       if (confirm('确定要清除所有历史弹幕吗？')) {
         fetch('https://danmu-backend.onrender.com/clear', {
-          method: 'POST'
+          method: 'POST',
+          headers: {
+            'x-admin-secret': password
+          }
         })
         .then(res => {
           if (res.ok) {
             alert('🧼 历史弹幕已清除！');
           } else {
-            alert('⚠️ 清除失败');
+            alert('❌ 密码错误或清除失败');
           }
         })
         .catch(err => {
