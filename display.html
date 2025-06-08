@@ -2,14 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示</title>
+  <title>弹幕展示（轨道+多色）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
       position: absolute;
       white-space: nowrap;
       font-size: 24px;
-      color: white;
       animation: move 8s linear forwards;
     }
     @keyframes move {
@@ -23,25 +22,39 @@
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
     const historyData = [];
 
+    const TRACK_COUNT = 5;
+    let currentTrack = 0;
+
+    const COLORS = ['white', 'red', 'yellow', 'cyan', 'lime', 'orange', 'violet', 'deeppink'];
+
     const showDanmu = (text) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
-      el.style.top = Math.random() * window.innerHeight + 'px';
+
+      const trackHeight = window.innerHeight / TRACK_COUNT;
+      const topPosition = currentTrack * trackHeight;
+      currentTrack = (currentTrack + 1) % TRACK_COUNT;
+
+      el.style.top = topPosition + 'px';
+      el.style.right = '0';
+      el.style.left = 'auto';
+
+      // 随机颜色
+      el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
       document.body.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
     };
 
-    // 弹幕播放循环
     const loopDanmu = () => {
       if (historyData.length > 0) {
         const randomText = historyData[Math.floor(Math.random() * historyData.length)];
         showDanmu(randomText);
       }
-      setTimeout(loopDanmu, 2000); // 每2秒循环一次
+      setTimeout(loopDanmu, 4000);
     };
 
-    // 加载历史并启动循环
     fetch('https://danmu-backend.onrender.com/history')
       .then(res => res.json())
       .then(data => {
@@ -50,14 +63,13 @@
             if (d.text) historyData.push(d.text);
           });
         }
-        loopDanmu(); // 无论是否为空都启动循环
+        loopDanmu();
       })
       .catch(err => {
-        console.error('加载历史弹幕失败:', err);
-        loopDanmu(); // 即使失败也启动空循环
+        console.error('获取历史弹幕失败:', err);
+        loopDanmu();
       });
 
-    // 接收新弹幕，加入历史池
     socket.onmessage = async (e) => {
       const text = await e.data.text();
       showDanmu(text);
