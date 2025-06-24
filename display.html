@@ -38,7 +38,7 @@
   socket.onmessage = (e) => {
     const d = JSON.parse(e.data);
     if (d.mode === "static") {
-      showStaticDanmu(d.text, d.color, d.position || "center");
+      showStaticDanmu(d.text, d.color, d.position || "top");
     } else {
       showDynamicDanmu(d.text, d.color);
     }
@@ -142,7 +142,7 @@
     if (historyData.length > 0) {
       const d = historyData[Math.floor(Math.random() * historyData.length)];
       if (d.mode === "static") {
-        showStaticDanmu(d.text, d.color, d.position || "center");
+        showStaticDanmu(d.text, d.color, d.position || "top");
       } else {
         showDynamicDanmu(d.text, d.color);
       }
