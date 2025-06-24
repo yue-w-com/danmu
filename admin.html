@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板（远程配置）</title>
+  <title>弹幕控制面板（含描边）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -17,7 +17,8 @@
       margin-top: 20px;
     }
     input[type="number"],
-    input[type="password"] {
+    input[type="password"],
+    input[type="color"] {
       font-size: 20px;
       padding: 10px;
       width: 100%;
@@ -47,15 +48,13 @@
 <body>
   <h1 style="font-size: 24px;">🔐 弹幕控制面板</h1>
 
-  <label>
-    管理密码：
-    <input type="password" id="passwordInput" placeholder="输入密码" />
-  </label>
-
+  <label>管理密码：<input type="password" id="passwordInput" placeholder="输入密码" /></label>
   <label>弹幕速度（像素/秒）：<input type="number" id="speedInput" /></label>
   <label>轨道数量：<input type="number" id="trackInput" /></label>
-  <label>字体高度（屏幕高度百分比）：<input type="number" id="fontPercentInput" /></label>
-  <label>历史弹幕间隔时间（秒）：<input type="number" id="historyIntervalInput" /></label>
+  <label>字体高度（屏幕百分比）：<input type="number" id="fontPercentInput" /></label>
+  <label>历史弹幕间隔（秒）：<input type="number" id="historyIntervalInput" /></label>
+  <label>描边颜色：<input type="color" id="strokeColorInput" /></label>
+  <label>描边粗细（px）：<input type="number" id="strokeWidthInput" /></label>
 
   <button onclick="updateSettings()">✅ 保存设置</button>
   <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
@@ -68,6 +67,8 @@
       document.getElementById('trackInput').value = data.tracks;
       document.getElementById('fontPercentInput').value = data.fontPercent;
       document.getElementById('historyIntervalInput').value = data.historyInterval;
+      document.getElementById('strokeColorInput').value = data.strokeColor || '#000000';
+      document.getElementById('strokeWidthInput').value = data.strokeWidth || 2;
     }
 
     function requirePassword() {
@@ -87,7 +88,9 @@
         speed: parseInt(document.getElementById('speedInput').value, 10),
         tracks: parseInt(document.getElementById('trackInput').value, 10),
         fontPercent: parseFloat(document.getElementById('fontPercentInput').value),
-        historyInterval: parseFloat(document.getElementById('historyIntervalInput').value)
+        historyInterval: parseFloat(document.getElementById('historyIntervalInput').value),
+        strokeColor: document.getElementById('strokeColorInput').value,
+        strokeWidth: parseFloat(document.getElementById('strokeWidthInput').value)
       };
 
       const res = await fetch('https://danmu-backend.onrender.com/settings', {
@@ -112,9 +115,7 @@
 
       const res = await fetch('https://danmu-backend.onrender.com/clear', {
         method: 'POST',
-        headers: {
-          'x-admin-secret': password
-        }
+        headers: { 'x-admin-secret': password }
       });
 
       if (res.ok) {

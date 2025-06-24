@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示</title>
+  <title>弹幕展示（含描边）</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -22,6 +22,8 @@
     let SPEED = 150;
     let FONT_PERCENT = 4;
     let HISTORY_INTERVAL = 4;
+    let STROKE_COLOR = '#000000';
+    let STROKE_WIDTH = 2;
 
     const showDanmu = (text, color, useRandomTrack = false) => {
       const el = document.createElement('div');
@@ -29,6 +31,13 @@
       el.textContent = text;
       el.style.fontSize = (window.innerHeight * FONT_PERCENT / 100) + 'px';
       el.style.color = color || 'white';
+      const stroke = STROKE_WIDTH + 'px ' + STROKE_COLOR;
+      el.style.textShadow = `
+        -${STROKE_WIDTH}px -${STROKE_WIDTH}px ${STROKE_COLOR},
+         ${STROKE_WIDTH}px -${STROKE_WIDTH}px ${STROKE_COLOR},
+        -${STROKE_WIDTH}px  ${STROKE_WIDTH}px ${STROKE_COLOR},
+         ${STROKE_WIDTH}px  ${STROKE_WIDTH}px ${STROKE_COLOR}
+      `;
 
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const track = useRandomTrack
@@ -75,6 +84,8 @@
         SPEED = settings.speed;
         FONT_PERCENT = settings.fontPercent;
         HISTORY_INTERVAL = settings.historyInterval;
+        STROKE_COLOR = settings.strokeColor || '#000000';
+        STROKE_WIDTH = settings.strokeWidth || 2;
 
         const historyRes = await fetch('https://danmu-backend.onrender.com/history');
         const history = await historyRes.json();
