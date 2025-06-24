@@ -33,39 +33,54 @@
     button:hover {
       background: #0f78d4;
     }
+    .locked input,
+    .locked button {
+      opacity: 0.5;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <h2>Danmu Admin Panel</h2>
 
-  <label for="speed">Speed</label>
-  <input type="number" id="speed" placeholder="e.g. 150">
+  <label for="adminPassword">Admin Password</label>
+  <input type="password" id="adminPassword" placeholder="Enter admin password">
+  <button onclick="unlock()">Unlock</button>
 
-  <label for="tracks">Tracks</label>
-  <input type="number" id="tracks" placeholder="e.g. 5">
+  <div id="controls" class="locked">
+    <label for="speed">Speed</label>
+    <input type="number" id="speed" placeholder="e.g. 150">
 
-  <label for="fontPercent">Font Size (% of screen height)</label>
-  <input type="number" id="fontPercent" placeholder="e.g. 4">
+    <label for="tracks">Tracks</label>
+    <input type="number" id="tracks" placeholder="e.g. 5">
 
-  <label for="historyInterval">History Loop Interval (seconds)</label>
-  <input type="number" id="historyInterval" placeholder="e.g. 4">
+    <label for="fontPercent">Font Size (% of screen height)</label>
+    <input type="number" id="fontPercent" placeholder="e.g. 4">
 
-  <label for="strokeColor">Stroke Color</label>
-  <input type="color" id="strokeColor">
+    <label for="historyInterval">History Loop Interval (seconds)</label>
+    <input type="number" id="historyInterval" placeholder="e.g. 4">
 
-  <label for="strokeWidth">Stroke Width (px)</label>
-  <input type="number" id="strokeWidth" placeholder="e.g. 1">
+    <label for="strokeColor">Stroke Color</label>
+    <input type="color" id="strokeColor">
 
-  <label for="staticDuration">Static Mode Duration (seconds)</label>
-  <input type="number" id="staticDuration" placeholder="e.g. 10">
+    <label for="strokeWidth">Stroke Width (px)</label>
+    <input type="number" id="strokeWidth" placeholder="e.g. 1">
 
-  <button onclick="saveSettings()">Save Settings</button>
-  <button onclick="clearDanmu()">Clear All Danmu</button>
+    <label for="staticDuration">Static Mode Duration (seconds)</label>
+    <input type="number" id="staticDuration" placeholder="e.g. 10">
+
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="clearDanmu()">Clear All Danmu</button>
+  </div>
 
   <script>
-    async function loadSettings() {
+    let password = "";
+
+    async function unlock() {
+      password = document.getElementById("adminPassword").value;
       const res = await fetch('/settings');
       const settings = await res.json();
+
       document.getElementById('speed').value = settings.speed;
       document.getElementById('tracks').value = settings.tracks;
       document.getElementById('fontPercent').value = settings.fontPercent;
@@ -73,10 +88,13 @@
       document.getElementById('strokeColor').value = settings.strokeColor || "#000000";
       document.getElementById('strokeWidth').value = settings.strokeWidth || 1;
       document.getElementById('staticDuration').value = settings.staticDuration || 10;
+
+      document.getElementById("controls").classList.remove("locked");
     }
 
     async function saveSettings() {
       const payload = {
+        password,
         speed: +document.getElementById('speed').value,
         tracks: +document.getElementById('tracks').value,
         fontPercent: +document.getElementById('fontPercent').value,
@@ -94,11 +112,13 @@
     }
 
     async function clearDanmu() {
-      await fetch('/clear', { method: 'POST' });
+      await fetch('/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
       alert('Danmu history cleared!');
     }
-
-    loadSettings();
   </script>
 </body>
 </html>
