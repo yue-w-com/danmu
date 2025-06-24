@@ -74,11 +74,12 @@
   </div>
 
   <script>
+    const API = 'https://danmu-backend.onrender.com';
     let password = "";
 
     async function unlock() {
       password = document.getElementById("adminPassword").value;
-      const res = await fetch('/settings');
+      const res = await fetch(`${API}/settings`);
       const settings = await res.json();
 
       document.getElementById('speed').value = settings.speed;
@@ -103,7 +104,7 @@
         strokeWidth: +document.getElementById('strokeWidth').value,
         staticDuration: +document.getElementById('staticDuration').value
       };
-      await fetch('/settings', {
+      await fetch(`${API}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -112,7 +113,7 @@
     }
 
     async function clearDanmu() {
-      await fetch('/clear', {
+      await fetch(`${API}/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
