@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>发送弹幕（推荐颜色 + 自选）</title>
+  <title>Send Danmu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -50,48 +50,43 @@
       border-radius: 50%;
       border: 2px solid white;
       cursor: pointer;
+      box-sizing: border-box;
     }
-    input[type="color"] {
-      width: 100%;
-      padding: 6px;
-      height: 50px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 10px;
+    .selected {
+      border: 3px solid yellow;
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">🎨 发送弹幕</h2>
-  <input type="text" id="danmuInput" placeholder="请输入弹幕内容..." />
-  <div class="colors">
-    <div class="color-choice" style="background:#ffffff" onclick="selectColor('#ffffff')"></div>
-    <div class="color-choice" style="background:#ff5c5c" onclick="selectColor('#ff5c5c')"></div>
-    <div class="color-choice" style="background:#ffa94d" onclick="selectColor('#ffa94d')"></div>
-    <div class="color-choice" style="background:#ffe066" onclick="selectColor('#ffe066')"></div>
-    <div class="color-choice" style="background:#8ce99a" onclick="selectColor('#8ce99a')"></div>
-    <div class="color-choice" style="background:#74c0fc" onclick="selectColor('#74c0fc')"></div>
-    <div class="color-choice" style="background:#b197fc" onclick="selectColor('#b197fc')"></div>
-    <div class="color-choice" style="background:#f783ac" onclick="selectColor('#f783ac')"></div>
+  <h2 style="text-align:center;">Send Danmu</h2>
+  <input type="text" id="danmuInput" placeholder="Type your message..." />
+  <div class="colors" id="colorChoices">
+    <div class="color-choice selected" style="background:#ffffff" onclick="selectColor(this, '#ffffff')"></div>
+    <div class="color-choice" style="background:#ff5c5c" onclick="selectColor(this, '#ff5c5c')"></div>
+    <div class="color-choice" style="background:#ffa94d" onclick="selectColor(this, '#ffa94d')"></div>
+    <div class="color-choice" style="background:#ffe066" onclick="selectColor(this, '#ffe066')"></div>
+    <div class="color-choice" style="background:#8ce99a" onclick="selectColor(this, '#8ce99a')"></div>
+    <div class="color-choice" style="background:#74c0fc" onclick="selectColor(this, '#74c0fc')"></div>
+    <div class="color-choice" style="background:#b197fc" onclick="selectColor(this, '#b197fc')"></div>
+    <div class="color-choice" style="background:#f783ac" onclick="selectColor(this, '#f783ac')"></div>
   </div>
-  <input type="color" id="colorInput" value="#ffffff" />
-  <button onclick="sendDanmu()">🚀 发射</button>
+  <button onclick="sendDanmu()">Send</button>
 
   <script>
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
+    let selectedColor = '#ffffff';
 
-    function selectColor(hex) {
-      document.getElementById('colorInput').value = hex;
+    function selectColor(el, hex) {
+      selectedColor = hex;
+      document.querySelectorAll('.color-choice').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
     }
 
     function sendDanmu() {
       const input = document.getElementById('danmuInput');
-      const colorInput = document.getElementById('colorInput');
       const text = input.value.trim();
-      const color = colorInput.value || '#ffffff';
-
       if (text) {
-        const payload = JSON.stringify({ text, color });
+        const payload = JSON.stringify({ text, color: selectedColor });
         socket.send(payload);
         input.value = '';
       }
