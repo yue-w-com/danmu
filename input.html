@@ -60,16 +60,16 @@
     .selected {
       border: 5px solid #1e90ff !important;
     }
-    .toggle-mode {
+    .toggle-mode, .position-mode {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
-    .toggle-mode label {
+    .toggle-mode label, .position-mode label {
       font-size: 18px;
     }
-    .toggle-mode select {
+    select {
       font-size: 18px;
       padding: 5px 10px;
       background: #222;
@@ -85,9 +85,18 @@
 
   <div class="toggle-mode">
     <label for="modeSelect">Mode:</label>
-    <select id="modeSelect">
+    <select id="modeSelect" onchange="togglePosition()">
       <option value="dynamic" selected>Dynamic</option>
       <option value="static">Static</option>
+    </select>
+  </div>
+
+  <div class="position-mode" id="positionSelect" style="display:none;">
+    <label for="position">Position:</label>
+    <select id="position">
+      <option value="top">Top</option>
+      <option value="center" selected>Center</option>
+      <option value="bottom">Bottom</option>
     </select>
   </div>
 
@@ -113,13 +122,20 @@
       el.classList.add('selected');
     }
 
+    function togglePosition() {
+      const mode = document.getElementById('modeSelect').value;
+      document.getElementById('positionSelect').style.display = mode === 'static' ? 'flex' : 'none';
+    }
+
     function sendDanmu() {
       const input = document.getElementById('danmuInput');
       const text = input.value.trim();
       const mode = document.getElementById('modeSelect').value;
+      const position = mode === 'static' ? document.getElementById('position').value : null;
       if (text) {
-        const payload = JSON.stringify({ text, color: selectedColor, mode });
-        socket.send(payload);
+        const payload = { text, color: selectedColor, mode };
+        if (position) payload.position = position;
+        socket.send(JSON.stringify(payload));
         input.value = '';
       }
     }

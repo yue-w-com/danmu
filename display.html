@@ -27,14 +27,18 @@
   let STROKE_COLOR = "#000000";
   let STROKE_WIDTH = 1;
   const historyData = [];
-  let usedStaticTracks = new Set();
+  const usedTracks = {
+    top: new Set(),
+    center: new Set(),
+    bottom: new Set()
+  };
 
   const socket = new WebSocket('wss://danmu-backend.onrender.com');
 
   socket.onmessage = (e) => {
     const d = JSON.parse(e.data);
     if (d.mode === "static") {
-      showStaticDanmu(d.text, d.color);
+      showStaticDanmu(d.text, d.color, d.position || "center");
     } else {
       showDynamicDanmu(d.text, d.color);
     }
@@ -74,38 +78,47 @@
   }
   showDynamicDanmu.trackIndex = -1;
 
-  function showStaticDanmu(text, color) {
+  function showStaticDanmu(text, color, position) {
     const el = document.createElement('div');
     el.className = 'danmu';
     el.textContent = text;
     el.style.fontSize = (window.innerHeight * FONT_PERCENT / 100) + 'px';
     el.style.color = color || 'white';
     el.style.left = '50%';
-    el.style.top = pickUnusedStaticTrack() + 'px';
     el.style.transform = 'translate(-50%, 0)';
     el.style.textShadow = `-${STROKE_WIDTH}px 0 ${STROKE_COLOR}, ${STROKE_WIDTH}px 0 ${STROKE_COLOR}, 0 -${STROKE_WIDTH}px ${STROKE_COLOR}, 0 ${STROKE_WIDTH}px ${STROKE_COLOR}`;
+
+    el.style.top = pickUnusedStaticTrack(position) + 'px';
 
     document.body.appendChild(el);
 
     setTimeout(() => {
       el.remove();
-      usedStaticTracks.delete(parseInt(el.style.top));
+      usedTracks[position].delete(parseInt(el.style.top));
     }, STATIC_DURATION * 1000);
   }
 
-  function pickUnusedStaticTrack() {
-    const trackHeight = window.innerHeight / TRACK_COUNT;
+  function pickUnusedStaticTrack(position) {
+    const fullHeight = window.innerHeight;
+    const sectionHeight = fullHeight / 3;
+    const trackHeight = fullHeight / TRACK_COUNT;
+    let baseY = 0;
+
+    if (position === 'top') baseY = 0;
+    else if (position === 'center') baseY = sectionHeight;
+    else if (position === 'bottom') baseY = sectionHeight * 2;
+
     let attempts = 0;
     while (attempts < 20) {
-      const track = Math.floor(Math.random() * TRACK_COUNT);
-      const y = Math.floor(track * trackHeight);
-      if (!usedStaticTracks.has(y)) {
-        usedStaticTracks.add(y);
+      const offset = Math.floor(Math.random() * (sectionHeight / trackHeight));
+      const y = Math.floor(baseY + offset * trackHeight);
+      if (!usedTracks[position].has(y)) {
+        usedTracks[position].add(y);
         return y;
       }
       attempts++;
     }
-    return Math.floor(Math.random() * window.innerHeight); // fallback
+    return baseY + Math.floor(Math.random() * sectionHeight);
   }
 
   async function initSettingsAndLoop() {
@@ -129,7 +142,7 @@
     if (historyData.length > 0) {
       const d = historyData[Math.floor(Math.random() * historyData.length)];
       if (d.mode === "static") {
-        showStaticDanmu(d.text, d.color);
+        showStaticDanmu(d.text, d.color, d.position || "center");
       } else {
         showDynamicDanmu(d.text, d.color);
       }
