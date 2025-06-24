@@ -141,11 +141,7 @@
   function loopDanmu() {
     if (historyData.length > 0) {
       const d = historyData[Math.floor(Math.random() * historyData.length)];
-      if (d.mode === "static") {
-        showStaticDanmu(d.text, d.color, d.position || "top");
-      } else {
-        showDynamicDanmu(d.text, d.color);
-      }
+      showDynamicDanmu(d.text, d.color);  // Always use dynamic mode for looped danmu
     }
     setTimeout(loopDanmu, HISTORY_INTERVAL * 1000);
   }
