@@ -2,27 +2,41 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕控制面板（同步当前设置）</title>
+  <title>弹幕控制面板（远程配置）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: sans-serif;
       background: #111;
       color: #eee;
       padding: 20px;
+      font-size: 18px;
     }
     label {
       display: block;
-      margin-top: 15px;
+      margin-top: 20px;
     }
-    input, button {
-      font-size: 16px;
+    input[type="number"],
+    input[type="password"] {
+      font-size: 20px;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 8px;
+      border: 1px solid #555;
       margin-top: 5px;
+      background: #222;
+      color: #eee;
     }
     button {
       background: crimson;
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 14px 24px;
+      font-size: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      width: 100%;
       cursor: pointer;
     }
     button:hover {
@@ -31,90 +45,86 @@
   </style>
 </head>
 <body>
-  <h1>🔐 弹幕控制面板（同步当前设置）</h1>
+  <h1 style="font-size: 24px;">🔐 弹幕控制面板</h1>
 
   <label>
     管理密码：
-    <input type="password" id="passwordInput" placeholder="输入密码后执行任何操作" />
+    <input type="password" id="passwordInput" placeholder="输入密码" />
   </label>
 
-  <label>
-    弹幕速度（像素/秒）：
-    <input type="number" id="speedInput" />
-  </label>
-
-  <label>
-    轨道数量：
-    <input type="number" id="trackInput" />
-  </label>
-
-  <label>
-    字体大小（像素）：
-    <input type="number" id="fontSizeInput" />
-  </label>
+  <label>弹幕速度（像素/秒）：<input type="number" id="speedInput" /></label>
+  <label>轨道数量：<input type="number" id="trackInput" /></label>
+  <label>字体高度（屏幕高度百分比）：<input type="number" id="fontPercentInput" /></label>
+  <label>历史弹幕间隔时间（秒）：<input type="number" id="historyIntervalInput" /></label>
 
   <button onclick="updateSettings()">✅ 保存设置</button>
-
-  <hr />
-
   <button onclick="clearHistory()">🧹 清除所有历史弹幕</button>
 
   <script>
-    function loadDefaults() {
-      document.getElementById('speedInput').value = localStorage.getItem('danmu_speed') || 150;
-      document.getElementById('trackInput').value = localStorage.getItem('danmu_tracks') || 5;
-      document.getElementById('fontSizeInput').value = localStorage.getItem('danmu_font_size') || 24;
+    async function loadRemoteSettings() {
+      const res = await fetch('https://danmu-backend.onrender.com/settings');
+      const data = await res.json();
+      document.getElementById('speedInput').value = data.speed;
+      document.getElementById('trackInput').value = data.tracks;
+      document.getElementById('fontPercentInput').value = data.fontPercent;
+      document.getElementById('historyIntervalInput').value = data.historyInterval;
     }
 
     function requirePassword() {
       const password = document.getElementById('passwordInput').value.trim();
       if (!password) {
-        alert('⚠️ 请先输入密码');
+        alert('⚠️ 请输入密码');
         return null;
       }
       return password;
     }
 
-    function updateSettings() {
+    async function updateSettings() {
       const password = requirePassword();
       if (!password) return;
 
-      const speed = parseInt(document.getElementById('speedInput').value, 10);
-      const tracks = parseInt(document.getElementById('trackInput').value, 10);
-      const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10);
+      const payload = {
+        speed: parseInt(document.getElementById('speedInput').value, 10),
+        tracks: parseInt(document.getElementById('trackInput').value, 10),
+        fontPercent: parseFloat(document.getElementById('fontPercentInput').value),
+        historyInterval: parseFloat(document.getElementById('historyIntervalInput').value)
+      };
 
-      localStorage.setItem('danmu_speed', speed);
-      localStorage.setItem('danmu_tracks', tracks);
-      localStorage.setItem('danmu_font_size', fontSize);
+      const res = await fetch('https://danmu-backend.onrender.com/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-secret': password
+        },
+        body: JSON.stringify(payload)
+      });
 
-      alert('✅ 设置已保存，刷新 display 页面后生效');
-    }
-
-    function clearHistory() {
-      const password = requirePassword();
-      if (!password) return;
-
-      if (confirm('确定要清除所有历史弹幕吗？')) {
-        fetch('https://danmu-backend.onrender.com/clear', {
-          method: 'POST',
-          headers: {
-            'x-admin-secret': password
-          }
-        })
-        .then(res => {
-          if (res.ok) {
-            alert('🧼 历史弹幕已清除！');
-          } else {
-            alert('❌ 密码错误或清除失败');
-          }
-        })
-        .catch(err => {
-          alert('⚠️ 网络错误：' + err);
-        });
+      if (res.ok) {
+        alert('✅ 设置已保存');
+      } else {
+        alert('❌ 密码错误或保存失败');
       }
     }
 
-    window.onload = loadDefaults;
+    async function clearHistory() {
+      const password = requirePassword();
+      if (!password) return;
+
+      const res = await fetch('https://danmu-backend.onrender.com/clear', {
+        method: 'POST',
+        headers: {
+          'x-admin-secret': password
+        }
+      });
+
+      if (res.ok) {
+        alert('🧹 历史弹幕已清除');
+      } else {
+        alert('❌ 密码错误或清除失败');
+      }
+    }
+
+    window.onload = loadRemoteSettings;
   </script>
 </body>
 </html>

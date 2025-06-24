@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>弹幕展示（修复实时展示）</title>
+  <title>弹幕展示</title>
   <style>
     body { margin: 0; overflow: hidden; background: black; }
     .danmu {
@@ -18,24 +18,23 @@
     const socket = new WebSocket('wss://danmu-backend.onrender.com');
     const historyData = [];
 
-    let TRACK_COUNT = parseInt(localStorage.getItem('danmu_tracks')) || 5;
-    const SPEED = parseInt(localStorage.getItem('danmu_speed')) || 150;
-    const FONT_SIZE = parseInt(localStorage.getItem('danmu_font_size')) || 24;
+    let TRACK_COUNT = 5;
+    let SPEED = 150;
+    let FONT_PERCENT = 4;
+    let HISTORY_INTERVAL = 4;
 
     const showDanmu = (text, color, useRandomTrack = false) => {
       const el = document.createElement('div');
       el.className = 'danmu';
       el.textContent = text;
-      el.style.fontSize = FONT_SIZE + 'px';
+      el.style.fontSize = (window.innerHeight * FONT_PERCENT / 100) + 'px';
       el.style.color = color || 'white';
 
       const trackHeight = window.innerHeight / TRACK_COUNT;
       const track = useRandomTrack
         ? Math.floor(Math.random() * TRACK_COUNT)
         : (showDanmu.trackIndex = (showDanmu.trackIndex + 1) % TRACK_COUNT);
-      const topPosition = track * trackHeight;
-
-      el.style.top = topPosition + 'px';
+      el.style.top = track * trackHeight + 'px';
       el.style.right = '0';
       el.style.left = 'auto';
 
@@ -47,50 +46,57 @@
         const animName = 'move_' + Math.random().toString(36).substr(2, 5);
 
         const style = document.createElement('style');
-        style.innerHTML =
-          '@keyframes ' + animName + ' {' +
-          'from { transform: translateX(0); }' +
-          'to { transform: translateX(-' + totalDistance + 'px); }' +
-          '}';
+        style.innerHTML = `@keyframes ${animName} {
+          from { transform: translateX(0); }
+          to { transform: translateX(-${totalDistance}px); }
+        }`;
         document.head.appendChild(style);
 
-        el.style.animation = animName + ' ' + duration + 's linear forwards';
+        el.style.animation = `${animName} ${duration}s linear forwards`;
       });
 
       el.addEventListener('animationend', () => el.remove());
     };
     showDanmu.trackIndex = -1;
 
-    const loopDanmu = () => {
+    function loopDanmu() {
       if (historyData.length > 0) {
         const d = historyData[Math.floor(Math.random() * historyData.length)];
         showDanmu(d.text, d.color, true);
       }
-      setTimeout(loopDanmu, 4000);
-    };
+      setTimeout(loopDanmu, HISTORY_INTERVAL * 1000);
+    }
 
-    fetch('https://danmu-backend.onrender.com/history')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          historyData.push(...data);
-        }
+    async function initSettingsAndLoop() {
+      try {
+        const res = await fetch('https://danmu-backend.onrender.com/settings');
+        const settings = await res.json();
+        TRACK_COUNT = settings.tracks;
+        SPEED = settings.speed;
+        FONT_PERCENT = settings.fontPercent;
+        HISTORY_INTERVAL = settings.historyInterval;
+
+        const historyRes = await fetch('https://danmu-backend.onrender.com/history');
+        const history = await historyRes.json();
+        historyData.push(...history);
         loopDanmu();
-      })
-      .catch(err => {
-        console.error('获取历史弹幕失败:', err);
+      } catch (err) {
+        console.error('设置或历史弹幕加载失败:', err);
         loopDanmu();
-      });
+      }
+    }
 
     socket.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        showDanmu(data.text, data.color, false);  // ✅ 立即展示
-        historyData.push(data);  // ✅ 加入历史用于后续轮播
+        showDanmu(data.text, data.color, false);
+        historyData.push(data);
       } catch (err) {
-        console.error('WebSocket 消息解析失败:', err);
+        console.error('实时弹幕解析失败:', err);
       }
     };
+
+    initSettingsAndLoop();
   </script>
 </body>
 </html>
