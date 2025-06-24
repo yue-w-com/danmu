@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Danmu Debug Display</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    #status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 16px;
+      z-index: 9999;
+    }
+    .danmu {
+      position: absolute;
+      white-space: nowrap;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">🔄 Connecting...</div>
+
+  <script>
+    const status = document.getElementById('status');
+    const historyData = [];
+
+    let TRACK_COUNT = 5;
+    let SPEED = 150;
+    let FONT_PERCENT = 4;
+    let HISTORY_INTERVAL = 4;
+    let STROKE_COLOR = "#000000";
+    let STROKE_WIDTH = 1;
+
+    function logStatus(msg, color = "white") {
+      status.innerHTML = msg;
+      status.style.color = color;
+    }
+
+    const socket = new WebSocket('wss://danmu-backend.onrender.com');
+
+    socket.onopen = () => logStatus("✅ WebSocket Connected", "lime");
+    socket.onerror = (e) => logStatus("❌ WebSocket Connection Failed", "red");
+    socket.onclose = () => logStatus("⚠️ WebSocket Closed", "orange");
+
+    socket.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        showDanmu(data.text, data.color, false);
+        historyData.push(data);
+      } catch (err) {
+        logStatus("❌ Error Parsing Danmu", "red");
+      }
+    };
+
+    const showDanmu = (text, color, useRandomTrack = false) => {
+      const el = document.createElement('div');
+      el.className = 'danmu';
+      el.textContent = text;
+      el.style.fontSize = (window.innerHeight * FONT_PERCENT / 100) + 'px';
+      el.style.color = color || 'white';
+      el.style.textShadow = `-${STROKE_WIDTH}px 0 ${STROKE_COLOR}, ${STROKE_WIDTH}px 0 ${STROKE_COLOR}, 0 -${STROKE_WIDTH}px ${STROKE_COLOR}, 0 ${STROKE_WIDTH}px ${STROKE_COLOR}`;
+
+      const trackHeight = window.innerHeight / TRACK_COUNT;
+      const track = useRandomTrack
+        ? Math.floor(Math.random() * TRACK_COUNT)
+        : (showDanmu.trackIndex = (showDanmu.trackIndex + 1) % TRACK_COUNT);
+      el.style.top = track * trackHeight + 'px';
+      el.style.right = '0';
+      el.style.left = 'auto';
+
+      document.body.appendChild(el);
+
+      requestAnimationFrame(() => {
+        const totalDistance = window.innerWidth + el.offsetWidth;
+        const duration = totalDistance / SPEED;
+        const animName = 'move_' + Math.random().toString(36).substr(2, 5);
+
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes ${animName} {
+          from { transform: translateX(0); }
+          to { transform: translateX(-${totalDistance}px); }
+        }`;
+        document.head.appendChild(style);
+
+        el.style.animation = `${animName} ${duration}s linear forwards`;
+      });
+
+      el.addEventListener('animationend', () => el.remove());
+    };
+    showDanmu.trackIndex = -1;
+
+    async function initSettingsAndLoop() {
+      try {
+        const res = await fetch('https://danmu-backend.onrender.com/settings');
+        const settings = await res.json();
+        TRACK_COUNT = settings.tracks;
+        SPEED = settings.speed;
+        FONT_PERCENT = settings.fontPercent;
+        HISTORY_INTERVAL = settings.historyInterval;
+        STROKE_COLOR = settings.strokeColor || "#000000";
+        STROKE_WIDTH = settings.strokeWidth || 1;
+
+        const historyRes = await fetch('https://danmu-backend.onrender.com/history');
+        const history = await historyRes.json();
+        historyData.push(...history);
+        loopDanmu();
+      } catch (err) {
+        logStatus("⚠️ Failed to load settings/history", "orange");
+      }
+    }
+
+    function loopDanmu() {
+      if (historyData.length > 0) {
+        const d = historyData[Math.floor(Math.random() * historyData.length)];
+        showDanmu(d.text, d.color, true);
+      }
+      setTimeout(loopDanmu, HISTORY_INTERVAL * 1000);
+    }
+
+    initSettingsAndLoop();
+  </script>
+</body>
+</html>
