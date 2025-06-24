@@ -60,15 +60,36 @@
     .selected {
       border: 5px solid #1e90ff !important;
     }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
+    .toggle-mode {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .toggle-mode label {
+      font-size: 18px;
+    }
+    .toggle-mode select {
+      font-size: 18px;
+      padding: 5px 10px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <h2>Chat with East Aliens</h2>
+  <h2 style="text-align:center;">Chat with East Aliens</h2>
   <input type="text" id="danmuInput" placeholder="Type your message..." />
+
+  <div class="toggle-mode">
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+      <option value="dynamic" selected>Dynamic</option>
+      <option value="static">Static</option>
+    </select>
+  </div>
 
   <div class="colors" id="colorChoices">
     <div class="color-choice selected" style="background:#ffffff" onclick="selectColor(this, '#ffffff')"></div>
@@ -95,8 +116,9 @@
     function sendDanmu() {
       const input = document.getElementById('danmuInput');
       const text = input.value.trim();
+      const mode = document.getElementById('modeSelect').value;
       if (text) {
-        const payload = JSON.stringify({ text, color: selectedColor });
+        const payload = JSON.stringify({ text, color: selectedColor, mode });
         socket.send(payload);
         input.value = '';
       }
