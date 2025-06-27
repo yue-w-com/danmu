@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+
 <!DOCTYPE html>
+
 
 let tracks = 5;
 <!DOCTYPE html>
@@ -23,7 +25,18 @@ let tracks = 5;
   </style>
 </head>
 <body>
-<script>let tracks = 5;
+<script>let lastTrack = -1;
+
+function getRandomTrack() {
+  let track;
+  do {
+    track = Math.floor(Math.random() * tracks);
+  } while (track === lastTrack && tracks > 1);
+  lastTrack = track;
+  return track;
+}
+
+let tracks = 5;
 
   let TRACK_COUNT = 5;
   let SPEED = 150;
@@ -60,7 +73,7 @@ let tracks = 5;
     el.style.textShadow = `-${STROKE_WIDTH}px 0 ${STROKE_COLOR}, ${STROKE_WIDTH}px 0 ${STROKE_COLOR}, 0 -${STROKE_WIDTH}px ${STROKE_COLOR}, 0 ${STROKE_WIDTH}px ${STROKE_COLOR}`;
 
     const trackHeight = window.innerHeight / TRACK_COUNT;
-    const track = Math.floor(Math.random() * (tracks || 5)); // safe fallback
+    const track = getRandomTrack(); // safe fallback
 // const original_track = showDynamicDanmu.trackIndex = (showDynamicDanmu.trackIndex + 1) % TRACK_COUNT;
     el.style.top = track * trackHeight + 'px';
     el.style.right = '0';
