@@ -59,7 +59,7 @@ let tracks = 5;
     el.style.textShadow = `-${STROKE_WIDTH}px 0 ${STROKE_COLOR}, ${STROKE_WIDTH}px 0 ${STROKE_COLOR}, 0 -${STROKE_WIDTH}px ${STROKE_COLOR}, 0 ${STROKE_WIDTH}px ${STROKE_COLOR}`;
 
     const trackHeight = window.innerHeight / TRACK_COUNT;
-    const track = Math.floor(Math.random() * tracks); // randomized
+    const track = Math.floor(Math.random() * (tracks || 5)); // safe fallback
 // const original_track = showDynamicDanmu.trackIndex = (showDynamicDanmu.trackIndex + 1) % TRACK_COUNT;
     el.style.top = track * trackHeight + 'px';
     el.style.right = '0';
