@@ -120,6 +120,39 @@
       });
       alert('Danmu history cleared!');
     }
-  </script>
+  
+let progressTimer = null;
+
+function formatTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}m ${sec}s`;
+}
+
+function updateProgress() {
+  const now = Date.now();
+  const elapsedMs = now - startTime;
+  document.getElementById("elapsedTime").innerText = "Running: " + formatTime(elapsedMs);
+
+  const elapsedMin = elapsedMs / 60000;
+  let phase = "";
+  if (elapsedMin < firstDuration) {
+    phase = `1st Phase (${firstInterval}s/条)`;
+  } else if (elapsedMin < firstDuration + secondDuration) {
+    phase = `2nd Phase (${secondInterval}s/条)`;
+  } else {
+    phase = `3rd Phase (${thirdInterval}s/条)`;
+  }
+  document.getElementById("currentPhase").innerText = "Phase: " + phase;
+}
+
+</script>
+
+<div style="margin-top:10px; font-size: 16px;" id="progressIndicator">
+  ⏱️ <span id="elapsedTime">Not started</span><br>
+  🔄 <span id="currentPhase">Phase: -</span>
+</div>
+
 </body>
 </html>
