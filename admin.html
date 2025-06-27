@@ -1,155 +1,124 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Danmu Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     body {
+      background: #111;
+      color: white;
       font-family: sans-serif;
       padding: 20px;
-      font-size: 16px;
+      font-size: 18px;
     }
-    input[type="number"] {
-      width: 60px;
-      font-size: 16px;
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
     }
     button {
-      font-size: 16px;
-      padding: 6px 12px;
-      margin: 5px;
+      background: #1e90ff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0f78d4;
+    }
+    .locked input,
+    .locked button {
+      opacity: 0.5;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
   <h2>Danmu Admin Panel</h2>
 
-  <div>
-    <label>Password: <input type="password" id="adminPassword" /></label>
-    <button onclick="unlock()">Unlock</button>
-  </div>
+  <label for="adminPassword">Admin Password</label>
+  <input type="password" id="adminPassword" placeholder="Enter admin password">
+  <button onclick="unlock()">Unlock</button>
 
-  <div id="controlPanel" style="display:none; margin-top:20px;">
-    <h3>Custom Playback Tempo</h3>
-    <div>
-      <label>1st Phase: 
-        <input type="number" id="firstDuration" value="20" /> min, 
-        <input type="number" id="firstInterval" value="4" /> sec/line
-      </label>
-    </div>
-    <div>
-      <label>2nd Phase: 
-        <input type="number" id="secondDuration" value="15" /> min, 
-        <input type="number" id="secondInterval" value="2" /> sec/line
-      </label>
-    </div>
-    <div>
-      <label>3rd Phase: 
-        <input type="number" id="thirdInterval" value="0.5" /> sec/line
-      </label>
-    </div>
-    <button onclick="startSchedule()">Start</button>
-    <button onclick="endSchedule()">End</button>
+  <div id="controls" class="locked">
+    <label for="speed">Speed</label>
+    <input type="number" id="speed" placeholder="e.g. 150">
 
-    <div style="margin-top:10px; font-size: 16px;" id="progressIndicator">
-      ⏱️ <span id="elapsedTime">Not started</span><br>
-      🔄 <span id="currentPhase">Phase: -</span>
-    </div>
+    <label for="tracks">Tracks</label>
+    <input type="number" id="tracks" placeholder="e.g. 5">
+
+    <label for="fontPercent">Font Size (% of screen height)</label>
+    <input type="number" id="fontPercent" placeholder="e.g. 4">
+
+    <label for="historyInterval">History Loop Interval (seconds)</label>
+    <input type="number" id="historyInterval" placeholder="e.g. 4">
+
+    <label for="strokeColor">Stroke Color</label>
+    <input type="color" id="strokeColor">
+
+    <label for="strokeWidth">Stroke Width (px)</label>
+    <input type="number" id="strokeWidth" placeholder="e.g. 1">
+
+    <label for="staticDuration">Static Mode Duration (seconds)</label>
+    <input type="number" id="staticDuration" placeholder="e.g. 10">
+
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="clearDanmu()">Clear All Danmu</button>
   </div>
 
   <script>
-    const endpoint = "https://danmu-backend.onrender.com";
-    let unlocked = false;
-    let startTime = null;
-    let scheduleTimer = null;
-    let progressTimer = null;
-    let firstDuration, secondDuration, firstInterval, secondInterval, thirdInterval;
+    const API = 'https://danmu-backend.onrender.com';
+    let password = "";
 
-    function unlock() {
-      const password = document.getElementById("adminPassword").value;
-      if (password.trim() !== "") {
-        unlocked = true;
-        document.getElementById("controlPanel").style.display = "block";
-      }
+    async function unlock() {
+      password = document.getElementById("adminPassword").value;
+      const res = await fetch(`${API}/settings`);
+      const settings = await res.json();
+
+      document.getElementById('speed').value = settings.speed;
+      document.getElementById('tracks').value = settings.tracks;
+      document.getElementById('fontPercent').value = settings.fontPercent;
+      document.getElementById('historyInterval').value = settings.historyInterval;
+      document.getElementById('strokeColor').value = settings.strokeColor || "#000000";
+      document.getElementById('strokeWidth').value = settings.strokeWidth || 1;
+      document.getElementById('staticDuration').value = settings.staticDuration || 10;
+
+      document.getElementById("controls").classList.remove("locked");
     }
 
-    function startSchedule() {
-      if (!unlocked) return;
-      firstDuration = parseFloat(document.getElementById("firstDuration").value);
-      secondDuration = parseFloat(document.getElementById("secondDuration").value);
-      firstInterval = parseFloat(document.getElementById("firstInterval").value);
-      secondInterval = parseFloat(document.getElementById("secondInterval").value);
-      thirdInterval = parseFloat(document.getElementById("thirdInterval").value);
-
-      startTime = Date.now();
-
-      if (scheduleTimer) clearInterval(scheduleTimer);
-      scheduleTimer = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 60000;
-        let interval;
-        if (elapsed < firstDuration) {
-          interval = firstInterval;
-        } else if (elapsed < firstDuration + secondDuration) {
-          interval = secondInterval;
-        } else {
-          interval = thirdInterval;
-        }
-        fetch(endpoint + "/settings", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            password: document.getElementById("adminPassword").value,
-            historyInterval: interval
-          })
-        });
-      }, 3000);
-
-      if (progressTimer) clearInterval(progressTimer);
-      progressTimer = setInterval(updateProgress, 1000);
-    }
-
-    function endSchedule() {
-      if (!unlocked) return;
-      clearInterval(scheduleTimer);
-      clearInterval(progressTimer);
-      fetch(endpoint + "/settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          password: document.getElementById("adminPassword").value,
-          historyInterval: 4
-        })
+    async function saveSettings() {
+      const payload = {
+        password,
+        speed: +document.getElementById('speed').value,
+        tracks: +document.getElementById('tracks').value,
+        fontPercent: +document.getElementById('fontPercent').value,
+        historyInterval: +document.getElementById('historyInterval').value,
+        strokeColor: document.getElementById('strokeColor').value,
+        strokeWidth: +document.getElementById('strokeWidth').value,
+        staticDuration: +document.getElementById('staticDuration').value
+      };
+      await fetch(`${API}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      document.getElementById("elapsedTime").innerText = "Stopped";
-      document.getElementById("currentPhase").innerText = "Phase: -";
+      alert('Settings saved!');
     }
 
-    function formatTime(ms) {
-      const totalSec = Math.floor(ms / 1000);
-      const min = Math.floor(totalSec / 60);
-      const sec = totalSec % 60;
-      return `${min}m ${sec}s`;
-    }
-
-    function updateProgress() {
-      const now = Date.now();
-      const elapsedMs = now - startTime;
-      document.getElementById("elapsedTime").innerText = "Running: " + formatTime(elapsedMs);
-      const elapsedMin = elapsedMs / 60000;
-      let phase = "";
-      if (elapsedMin < firstDuration) {
-        phase = `1st Phase (${firstInterval}s/条)`;
-      } else if (elapsedMin < firstDuration + secondDuration) {
-        phase = `2nd Phase (${secondInterval}s/条)`;
-      } else {
-        phase = `3rd Phase (${thirdInterval}s/条)`;
-      }
-      document.getElementById("currentPhase").innerText = "Phase: " + phase;
+    async function clearDanmu() {
+      await fetch(`${API}/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      alert('Danmu history cleared!');
     }
   </script>
 </body>
