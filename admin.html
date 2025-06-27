@@ -34,9 +34,23 @@
       background: #0f78d4;
     }
     .locked input,
-    .locked button {
+    .locked button:not(.control-button) {
       opacity: 0.5;
       pointer-events: none;
+    }
+    .control-button {
+      background: #28a745;
+      margin-bottom: 10px;
+    }
+    .control-button.end {
+      background: #dc3545;
+    }
+    .row-group {
+      display: flex;
+      gap: 10px;
+    }
+    .row-group input {
+      flex: 1;
     }
   </style>
 </head>
@@ -69,13 +83,29 @@
     <label for="staticDuration">Static Mode Duration (seconds)</label>
     <input type="number" id="staticDuration" placeholder="e.g. 10">
 
+    <h3>Custom Tempo (minutes / seconds)</h3>
+    <div class="row-group">
+      <input type="number" id="firstDuration" placeholder="First phase minutes" />
+      <input type="number" id="firstInterval" placeholder="Interval (sec)" />
+    </div>
+    <div class="row-group">
+      <input type="number" id="secondDuration" placeholder="Second phase minutes" />
+      <input type="number" id="secondInterval" placeholder="Interval (sec)" />
+    </div>
+    <input type="number" id="thirdInterval" placeholder="Final interval (sec)" />
+
     <button onclick="saveSettings()">Save Settings</button>
     <button onclick="clearDanmu()">Clear All Danmu</button>
+
+    <button class="control-button" onclick="startSequence()">Start</button>
+    <button class="control-button end" onclick="endSequence()">End</button>
   </div>
 
   <script>
     const API = 'https://danmu-backend.onrender.com';
     let password = "";
+    let startTimestamp = null;
+    let intervalUpdater = null;
 
     async function unlock() {
       password = document.getElementById("adminPassword").value;
@@ -119,6 +149,44 @@
         body: JSON.stringify({ password })
       });
       alert('Danmu history cleared!');
+    }
+
+    function startSequence() {
+      const d1 = +document.getElementById('firstDuration').value * 60;
+      const i1 = +document.getElementById('firstInterval').value;
+      const d2 = +document.getElementById('secondDuration').value * 60;
+      const i2 = +document.getElementById('secondInterval').value;
+      const i3 = +document.getElementById('thirdInterval').value;
+
+      if (intervalUpdater) clearInterval(intervalUpdater);
+      startTimestamp = Date.now();
+
+      intervalUpdater = setInterval(async () => {
+        const elapsed = (Date.now() - startTimestamp) / 1000;
+        let interval = i3;
+        if (elapsed < d1) interval = i1;
+        else if (elapsed < d1 + d2) interval = i2;
+
+        const payload = { password, historyInterval: interval };
+        await fetch(`${API}/settings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }, 3000);
+
+      alert('Custom tempo started');
+    }
+
+    function endSequence() {
+      if (intervalUpdater) clearInterval(intervalUpdater);
+      const payload = { password, historyInterval: 4 };
+      fetch(`${API}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      alert('Tempo reset to 4s per danmu.');
     }
   </script>
 </body>
