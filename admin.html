@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -71,11 +72,57 @@
 
     <button onclick="saveSettings()">Save Settings</button>
     <button onclick="clearDanmu()">Clear All Danmu</button>
-  </div>
+
+    <hr style="margin: 20px 0; border-color: #333;">
+
+    <h3>Custom Playback Tempo</h3>
+    <label>1st Phase: <input type="number" id="firstDuration" value="20" /> min, <input type="number" id="firstInterval" value="4" /> sec/line</label>
+    <label>2nd Phase: <input type="number" id="secondDuration" value="15" /> min, <input type="number" id="secondInterval" value="2" /> sec/line</label>
+    <label>3rd Phase: <input type="number" id="thirdInterval" value="0.5" /> sec/line</label>
+    <button onclick="startSchedule()">Start</button>
+    <button onclick="endSchedule()">End</button>
+
+    <div style="margin-top:10px; font-size: 16px;" id="progressIndicator">
+      ⏱️ <span id="elapsedTime">Not started</span><br>
+      🔄 <span id="currentPhase">Phase: -</span>
+    
+<hr style="margin: 20px 0; border-color: #333;">
+<h3>Custom Playback Tempo</h3>
+<label>1st Phase: <input type="number" id="firstDuration" value="20" /> min, <input type="number" id="firstInterval" value="4" /> sec/line</label>
+<label>2nd Phase: <input type="number" id="secondDuration" value="15" /> min, <input type="number" id="secondInterval" value="2" /> sec/line</label>
+<label>3rd Phase: <input type="number" id="thirdInterval" value="0.5" /> sec/line</label>
+<button onclick="startSchedule()">Start</button>
+<button onclick="endSchedule()">End</button>
+
+<div style="margin-top:10px; font-size: 16px;" id="progressIndicator">
+  ⏱️ <span id="elapsedTime">Not started</span><br>
+  🔄 <span id="currentPhase">Phase: -</span>
+</div>
+
+</div>
+  
+<hr style="margin: 20px 0; border-color: #333;">
+<h3>Custom Playback Tempo</h3>
+<label>1st Phase: <input type="number" id="firstDuration" value="20" /> min, <input type="number" id="firstInterval" value="4" /> sec/line</label>
+<label>2nd Phase: <input type="number" id="secondDuration" value="15" /> min, <input type="number" id="secondInterval" value="2" /> sec/line</label>
+<label>3rd Phase: <input type="number" id="thirdInterval" value="0.5" /> sec/line</label>
+<button onclick="startSchedule()">Start</button>
+<button onclick="endSchedule()">End</button>
+
+<div style="margin-top:10px; font-size: 16px;" id="progressIndicator">
+  ⏱️ <span id="elapsedTime">Not started</span><br>
+  🔄 <span id="currentPhase">Phase: -</span>
+</div>
+
+</div>
 
   <script>
     const API = 'https://danmu-backend.onrender.com';
     let password = "";
+    let startTime = null;
+    let scheduleTimer = null;
+    let progressTimer = null;
+    let firstDuration, secondDuration, firstInterval, secondInterval, thirdInterval;
 
     async function unlock() {
       password = document.getElementById("adminPassword").value;
@@ -120,6 +167,153 @@
       });
       alert('Danmu history cleared!');
     }
-  </script>
+
+    function startSchedule() {
+      firstDuration = parseFloat(document.getElementById("firstDuration").value);
+      secondDuration = parseFloat(document.getElementById("secondDuration").value);
+      firstInterval = parseFloat(document.getElementById("firstInterval").value);
+      secondInterval = parseFloat(document.getElementById("secondInterval").value);
+      thirdInterval = parseFloat(document.getElementById("thirdInterval").value);
+
+      startTime = Date.now();
+      if (scheduleTimer) clearInterval(scheduleTimer);
+      scheduleTimer = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 60000;
+        let interval;
+        if (elapsed < firstDuration) {
+          interval = firstInterval;
+        } else if (elapsed < firstDuration + secondDuration) {
+          interval = secondInterval;
+        } else {
+          interval = thirdInterval;
+        }
+
+        fetch(`${API}/settings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, historyInterval: interval })
+        });
+      }, 3000);
+
+      if (progressTimer) clearInterval(progressTimer);
+      progressTimer = setInterval(updateProgress, 1000);
+    }
+
+    function endSchedule() {
+      clearInterval(scheduleTimer);
+      clearInterval(progressTimer);
+      fetch(`${API}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, historyInterval: 4 })
+      });
+      document.getElementById("elapsedTime").innerText = "Stopped";
+      document.getElementById("currentPhase").innerText = "Phase: -";
+    }
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      return `${min}m ${sec}s`;
+    }
+
+    function updateProgress() {
+      const now = Date.now();
+      const elapsedMs = now - startTime;
+      document.getElementById("elapsedTime").innerText = "Running: " + formatTime(elapsedMs);
+
+      const elapsedMin = elapsedMs / 60000;
+      let phase = "";
+      if (elapsedMin < firstDuration) {
+        phase = `1st Phase (${firstInterval}s/条)`;
+      } else if (elapsedMin < firstDuration + secondDuration) {
+        phase = `2nd Phase (${secondInterval}s/条)`;
+      } else {
+        phase = `3rd Phase (${thirdInterval}s/条)`;
+      }
+      document.getElementById("currentPhase").innerText = "Phase: " + phase;
+    }
+  
+let startTime = null;
+let scheduleTimer = null;
+let progressTimer = null;
+let firstDuration, secondDuration, firstInterval, secondInterval, thirdInterval;
+
+function startSchedule() {
+  firstDuration = parseFloat(document.getElementById("firstDuration").value);
+  secondDuration = parseFloat(document.getElementById("secondDuration").value);
+  firstInterval = parseFloat(document.getElementById("firstInterval").value);
+  secondInterval = parseFloat(document.getElementById("secondInterval").value);
+  thirdInterval = parseFloat(document.getElementById("thirdInterval").value);
+
+  startTime = Date.now();
+
+  if (scheduleTimer) clearInterval(scheduleTimer);
+  scheduleTimer = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 60000;
+    let interval;
+    if (elapsed < firstDuration) {
+      interval = firstInterval;
+    } else if (elapsed < firstDuration + secondDuration) {
+      interval = secondInterval;
+    } else {
+      interval = thirdInterval;
+    }
+
+    fetch("/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password: document.getElementById("adminPassword").value,
+        historyInterval: interval
+      })
+    });
+  }, 3000);
+
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(updateProgress, 1000);
+}
+
+function endSchedule() {
+  clearInterval(scheduleTimer);
+  clearInterval(progressTimer);
+  fetch("/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      password: document.getElementById("adminPassword").value,
+      historyInterval: 4
+    })
+  });
+  document.getElementById("elapsedTime").innerText = "Stopped";
+  document.getElementById("currentPhase").innerText = "Phase: -";
+}
+
+function formatTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}m ${sec}s`;
+}
+
+function updateProgress() {
+  const now = Date.now();
+  const elapsedMs = now - startTime;
+  document.getElementById("elapsedTime").innerText = "Running: " + formatTime(elapsedMs);
+
+  const elapsedMin = elapsedMs / 60000;
+  let phase = "";
+  if (elapsedMin < firstDuration) {
+    phase = `1st Phase (${firstInterval}s/条)`;
+  } else if (elapsedMin < firstDuration + secondDuration) {
+    phase = `2nd Phase (${secondInterval}s/条)`;
+  } else {
+    phase = `3rd Phase (${thirdInterval}s/条)`;
+  }
+  document.getElementById("currentPhase").innerText = "Phase: " + phase;
+}
+
+</script>
 </body>
 </html>
