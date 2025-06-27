@@ -1,10 +1,14 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+
 let tracks = 5;
 <!DOCTYPE html>
+
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Danmu Display</title>
-  <style>
+<meta charset="utf-8"/>
+<title>Danmu Display</title>
+<style>
     body {
       margin: 0;
       background: black;
@@ -149,6 +153,11 @@ let tracks = 5;
   .then(res => res.json())
   .then(settings => {
     HISTORY_INTERVAL = settings.historyInterval || 4;
+    tracks = settings.tracks || 5;
+    speed = settings.speed || 150;
+    fontPercent = settings.fontPercent || 4;
+    strokeColor = settings.strokeColor || '#000000';
+    strokeWidth = settings.strokeWidth || 1;
     tracks = settings.tracks || 5;
     setTimeout(loopDanmu, HISTORY_INTERVAL * 1000);
   });
