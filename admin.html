@@ -119,6 +119,55 @@
   <script>
     const API = 'https://danmu-backend.onrender.com';
     let password = "";
+    let startTime = null;
+    let scheduleTimer = null;
+    let progressTimer = null;
+    let firstDuration, secondDuration, firstInterval, secondInterval, thirdInterval;
+
+    async function unlock() {
+      password = document.getElementById("adminPassword").value;
+      const res = await fetch(`${API}/settings`);
+      const settings = await res.json();
+
+      document.getElementById('speed').value = settings.speed;
+      document.getElementById('tracks').value = settings.tracks;
+      document.getElementById('fontPercent').value = settings.fontPercent;
+      document.getElementById('historyInterval').value = settings.historyInterval;
+      document.getElementById('strokeColor').value = settings.strokeColor || "#000000";
+      document.getElementById('strokeWidth').value = settings.strokeWidth || 1;
+      document.getElementById('staticDuration').value = settings.staticDuration || 10;
+
+      document.getElementById("controls").classList.remove("locked");
+    }
+
+    async function saveSettings() {
+      const payload = {
+        password,
+        speed: +document.getElementById('speed').value,
+        tracks: +document.getElementById('tracks').value,
+        fontPercent: +document.getElementById('fontPercent').value,
+        historyInterval: +document.getElementById('historyInterval').value,
+        strokeColor: document.getElementById('strokeColor').value,
+        strokeWidth: +document.getElementById('strokeWidth').value,
+        staticDuration: +document.getElementById('staticDuration').value
+      };
+      await fetch(`${API}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      alert('Settings saved!');
+    }
+
+    async function clearDanmu() {
+      await fetch(`${API}/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      alert('Danmu history cleared!');
+    }
+
     s/条)`;
       } else if (elapsedMin < firstDuration + secondDuration) {
         phase = `2nd Phase (${secondInterval}s/条)`;
