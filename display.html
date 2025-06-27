@@ -54,7 +54,8 @@
     el.style.textShadow = `-${STROKE_WIDTH}px 0 ${STROKE_COLOR}, ${STROKE_WIDTH}px 0 ${STROKE_COLOR}, 0 -${STROKE_WIDTH}px ${STROKE_COLOR}, 0 ${STROKE_WIDTH}px ${STROKE_COLOR}`;
 
     const trackHeight = window.innerHeight / TRACK_COUNT;
-    const track = showDynamicDanmu.trackIndex = (showDynamicDanmu.trackIndex + 1) % TRACK_COUNT;
+    const track = Math.floor(Math.random() * tracks); // randomized
+// const original_track = showDynamicDanmu.trackIndex = (showDynamicDanmu.trackIndex + 1) % TRACK_COUNT;
     el.style.top = track * trackHeight + 'px';
     el.style.right = '0';
     el.style.left = 'auto';
@@ -143,7 +144,12 @@
       const d = historyData[Math.floor(Math.random() * historyData.length)];
       showDynamicDanmu(d.text, d.color);  // Always use dynamic mode for looped danmu
     }
+    fetch('https://danmu-backend.onrender.com/settings')
+  .then(res => res.json())
+  .then(settings => {
+    HISTORY_INTERVAL = settings.historyInterval || 4;
     setTimeout(loopDanmu, HISTORY_INTERVAL * 1000);
+  });
   }
 
   initSettingsAndLoop();
